@@ -1,0 +1,114 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="ExcelCSVReader" default="main" basedir=".">
+<description> Build script </description>
+
+<!-- Main targets -->
+<target name="build" depends="jar">
+</target>
+
+
+<!-- Compiler settings -->
+<property name="jvm-target" value="jvm-1.6"/>
+
+<!-- Paths -->
+	<property name="projectName" value="ExcelCSVReader" />
+<property name="scala.lib.dir" location="C:/Program Files (x86)/scala/lib"/>
+<property name="src.dir" location="${basedir}/src" />
+<property name="lib.dir" location="${basedir}/lib"/>
+<property name="build.dir" location="${basedir}/build"/>
+<property name="cls.build.dir" location="${build.dir}"/>
+<property name="lib.build.dir" location="${build.dir}/lib"/>
+<property name="java.home" location="${JAVA_HOME}"/>
+<property name="dist.dir" location="dist" />
+	<property name="dist.lib.dir" location="dist/lib" />
+
+	<!-- ivy start -->
+		<!-- ivy to get dependencies and copy to project lib folder automatically -->
+		<target name="resolve" description="retrieve dependencies with ivy">
+			<ivy:retrieve />
+		</target>
+
+		<!-- install ivy -->
+		<target name="ivy" description="Install ivy">
+			<mkdir dir="${user.home}/.ant/lib" />
+			<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0-rc1/ivy-2.4.0-rc1.jar" />
+		</target>
+		<!-- ivy end -->	
+	
+
+	<target name="copy-dependencies">
+			<copy todir="${dist.lib.dir}">
+				<fileset dir="${lib.dir}" includes="**/*.jar" excludes="**/*sources.jar, **/*javadoc.jar" />
+			</copy>
+		</target>
+	
+	<!-- external libraries classpath, we don't need sources and javadoc -->
+		<path id="classpath">
+			<fileset dir="${basedir}/">
+				<include name="${lib.dir}/*.jar" />
+				<exclude name="${lib.dir}/*sources.jar"/>
+				<exclude name="${lib.dir}/*javadoc.jar"/>
+			</fileset>
+			<pathelement location="${build.dir}" />
+			 	<fileset dir="${scala.lib.dir}"> <include name="*.jar" /></fileset>
+			 	<fileset dir="${lib.dir}"> <include name="*.jar" /></fileset>
+			 
+		</path>
+
+	
+<path id="project.classpath">
+	<pathelement location="${build.dir}" />
+ 	<fileset dir="${scala.lib.dir}"> <include name="*.jar" /></fileset>
+ 	<fileset dir="${lib.dir}"> <include name="*.jar" /></fileset>
+ </path>
+	
+
+	<!-- constructs the external libraries classpath name -->
+	<pathconvert property="classpath.name" pathsep=" ">
+		<path refid="classpath" />
+		<mapper>
+			<chainedmapper>
+				<flattenmapper />
+				<globmapper from="*.jar" to="lib/*.jar" />
+			</chainedmapper>
+		</mapper>
+	</pathconvert>
+	
+<!-- Scala compiler task -->
+	<taskdef resource="scala/tools/ant/antlib.xml"> 
+		<classpath> 
+			<pathelement location="${scala.lib.dir}/scala-compiler.jar"/> 
+			<pathelement location="${scala.lib.dir}/scala-reflect.jar"/> 
+			<pathelement location="${scala.lib.dir}/scala-library.jar"/> 
+		</classpath>
+	</taskdef>
+
+<!-- Targets -->
+<target name="clean">
+    <delete dir="${build.dir}"/>
+</target>
+
+<target name="compile" depends="clean">
+    <mkdir dir="${cls.build.dir}"/>
+    <scalac srcdir="${src.dir}" destdir="${cls.build.dir}" target="${jvm-target}" classpathref="classpath" force="yes" deprecation="yes">
+        <include name="**/*.scala"/>
+    </scalac>
+</target>
+
+	<!-- jar it, and declares the ext libraries in manifest.mf file -->
+	<target name="jar" depends="compile, copy-dependencies" description="package, output to JAR">
+
+		<echo message="classpath.name : ${classpath.name} " />
+
+		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${dist.lib.dir}" />
+
+		<jar jarfile="${dist.dir}/${projectName}.jar" basedir="${build.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}" />
+				<attribute name="Class-Path" value="${classpath.name}" />
+			</manifest>
+		</jar>
+	</target>
+	<!-- Default, run this -->
+<target name="main" depends="clean, compile, jar" />
+</project>
