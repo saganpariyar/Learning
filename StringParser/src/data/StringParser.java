@@ -78,7 +78,7 @@ public class StringParser {
 	public static void main(String[] args) {
 		StringParser parser = new StringParser();
 		
-		String[] inputs =  { "200 Broadway Av", "Calle Aduana, 29", "Calle 39 No 1540" ,"4, rue de la revolution", "Winterallee 3", "Musterstrasse 45", "Am Bächle 23", "Auf der Vogelwiese 23 b", "Blaufeldweg 123B"};
+		String[] inputs =  { "sample strings "};
 
 		for(String input: inputs ){
 			System.out.println("String "+input +" is parse to "+parser.parse(input));
